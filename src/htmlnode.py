@@ -1,11 +1,10 @@
-from types import NotImplementedType
-
+from typing import List
 
 class HTMLNode():
-    def __init__(self, tag=None, value=None, children=None, props:dict=None) -> None:
+    def __init__(self, tag=None, value=None, children=[], props:dict={}) -> None:
         self.tag = tag
         self.value = value
-        self.children = children
+        self.children:List[HTMLNode] = children
         self.props = props
 
     def to_html(self):
@@ -23,13 +22,26 @@ class HTMLNode():
         return f"HTMLNode({self.tag}, {self.value}, {self.children}, {self.props})"
 
 class LeafNode(HTMLNode):
-    def __init__(self, tag, value:str, props: dict = None) -> None:
+    def __init__(self, tag=None, value:str='', props: dict = {}) -> None:
         assert(value is not None)
-        super().__init__(tag, value, None, props)
+        super().__init__(tag=tag, value=value, children=None, props=props)
 
     def to_html(self):
-        return f"<{self.tag}{self.props_to_html()}> {self.value} </{self.tag}>"
+        if self.tag is None:
+            return self.value
+        return f"<{self.tag}{self.props_to_html()}>{self.value}</{self.tag}>"
 
 class ParentNode(HTMLNode):
-    def __init__(self, tag, children, props: dict = None) -> None:
-        super().__init__(tag,  children, props)
+    def __init__(self, tag, children, props: dict = {}) -> None:
+        assert(tag is not None)
+        assert(children is not None)
+        assert(children != {})
+        super().__init__(tag=tag,  children=children, props=props)
+
+    def to_html(self):
+        opening_tag = f"<{self.tag}>"
+        closing_tag = f"</{self.tag}>"
+        children_html = ''
+        for child in self.children:
+            children_html += child.to_html()
+        return opening_tag + children_html + closing_tag

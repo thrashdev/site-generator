@@ -25,11 +25,13 @@ class LeafNode(HTMLNode):
     def __init__(self, tag=None, value:str='', props: dict = {}) -> None:
         assert(value is not None)
         super().__init__(tag=tag, value=value, children=None, props=props)
-
+    
     def to_html(self):
+        void_elements = ["img"]
+        closing_tag = f"</{self.tag}>" if self.tag not in void_elements else ''
         if self.tag is None:
             return self.value
-        return f"<{self.tag}{self.props_to_html()}>{self.value}</{self.tag}>"
+        return f"<{self.tag}{self.props_to_html()}>{self.value}{closing_tag}"
 
 class ParentNode(HTMLNode):
     def __init__(self, tag, children, props: dict = {}) -> None:

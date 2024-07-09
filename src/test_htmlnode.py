@@ -12,13 +12,13 @@ class TestHTMLNode(unittest.TestCase):
 class TestLeafNode(unittest.TestCase):
     def test_paragraph(self):
         node = LeafNode("p", "This is a paragraph of text")
-        target_html = "<p> This is a paragraph of text </p>"
+        target_html = "<p>This is a paragraph of text</p>"
         self.assertEqual(node.to_html(), target_html)
 
 
     def test_anchor(self):
         node = LeafNode("a", "Click me!", {"href" : "https://www.google.com"})
-        target_html = '<a href="https://www.google.com"> Click me! </a>'
+        target_html = '<a href="https://www.google.com">Click me!</a>'
         self.assertEqual(node.to_html(), target_html)
     
 class TestParentNode(unittest.TestCase):

@@ -77,8 +77,15 @@ def split_nodes_delimeter(old_nodes:List[TextNode], delimeter:str, text_type:Tex
         words = node.text.split(' ')
         for word in words:
             if delimeter in word:
-                value = word.strip(delimeter)
-                result.append(TextNode(value, delimeter_types[delimeter]))
+                del_count = word.count('*')
+                print(del_count)
+                if del_count <= 2:
+                    value = word[1:len(word)-1]
+                    result.append(TextNode(value, delimeter_types[delimeter]))
+                elif text_type != TextType.Italic:
+                    value = word.strip(delimeter)
+                    print(value)
+                    result.append(TextNode(value, delimeter_types[delimeter]))
             else: 
                 result.append(TextNode(word, TextType.Text))
 

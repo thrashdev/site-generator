@@ -1,3 +1,4 @@
+from typing import List
 from htmlnode import HTMLNode, LeafNode
 from enum import Enum
 import re
@@ -58,13 +59,32 @@ def prep_inline_link(text):
     link = re.search(link_pat, text).group(0).strip('(').strip(')')
     return alt, link
 
-
 def prep_inline_img(text):
     alt_pat = r"\[(.*?)\]"
     alt = re.search(alt_pat, text).group(0).strip('[').strip(']')
     link_pat = r"\((.*?)\)"
     link = re.search(link_pat, text).group(0).strip('(').strip(')')
     return alt, link
+
+
+def split_nodes_delimeter(old_nodes:List[TextNode], delimeter:str, text_type:TextType):
+    delimeter_types = {"*" : TextType.Italic, "**" : TextType.Bold, '`' : TextType.Code}
+    result:List[TextNode] = []
+    for node in old_nodes:
+        if node.text_type != TextType.Text:
+            result.append(node)
+            continue
+        words = node.text.split(' ')
+        for word in words:
+            if delimeter in word:
+                value = word.strip(delimeter)
+                result.append(TextNode(value, delimeter_types[delimeter]))
+            else: 
+                result.append(TextNode(word, TextType.Text))
+
+    return result
+
+
 # def md_strip(text:str, pat) -> str:
 #     value = map(lambda a: a.strip(pat), text.split(' '))
 #     value = ' '.join(list(value))

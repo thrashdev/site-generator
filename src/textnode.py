@@ -74,24 +74,60 @@ def split_nodes_delimeter(old_nodes:List[TextNode], delimeter:str, text_type:Tex
         if node.text_type != TextType.Text:
             result.append(node)
             continue
-        words = node.text.split(' ')
-        for word in words:
-            if delimeter in word:
-                del_count = word.count('*')
-                print(del_count)
-                if del_count <= 2:
-                    value = word[1:len(word)-1]
-                    result.append(TextNode(value, delimeter_types[delimeter]))
-                elif text_type != TextType.Italic:
-                    value = word.strip(delimeter)
-                    print(value)
-                    result.append(TextNode(value, delimeter_types[delimeter]))
-            else: 
-                result.append(TextNode(word, TextType.Text))
+        
+        indices = get_indexes(node.text, delimeter)
+        if len(indices) // 2 != 0:
+            last_index = indices[-1]
+            print(f"Unclosed markdown tag: {node.text[last_index:]} ")
 
+        strings = split_by_md_syntax(node.text, indices)
+        result.extend([TextNode(s, delimeter_types[delimeter], None) for s in strings])
     return result
 
 
+def get_indexes(text, delimeter):
+    result = []
+    for index, letter in enumerate(text):
+        if letter == delimeter:
+            start = index
+            end = index + 1
+            if len(result) % 2 == 0:
+                result.append(start)
+            else:
+                result.append(end)
+
+    result.insert(0,0)
+    result.append(len(text))
+    return result
+
+def pair_indexes(indexes:list, text_length) -> list:
+    result = []
+    result.append((0, indexes[0]-1))
+    last_index = indexes[-1]
+    while indexes:
+        result.append((indexes.pop(0)-1, indexes.pop(0)+1))
+    result.append((last_index+1, text_length))
+    return result
+
+# def split_by_md_syntax(text, pairs:List[tuple]) -> List[str]:
+#     result = []
+#     for pair in pairs:
+#         start = pair[0]
+#         end = pair[1]
+#         result.append(text[start:end])
+#     return result
+
+def split_by_md_syntax(text, indices:List[int]) -> List[str]:
+    result = []
+    for i in range (0, len(indices)):
+        try:
+            end = indices[i+1]
+        except IndexError:
+            break
+        start = indices[i]
+        s = text[start:end]
+        result.append(s)
+    return result
 # def md_strip(text:str, pat) -> str:
 #     value = map(lambda a: a.strip(pat), text.split(' '))
 #     value = ' '.join(list(value))

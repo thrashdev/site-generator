@@ -29,12 +29,7 @@ class TestTextNode(unittest.TestCase):
         target_html = "<i>italic</i>"
         self.assertEqual(node_html, target_html)
 
-        tnode = TextNode(
-"""
-``` 
-this is code
-```
-""", TextType.Code)
+        tnode = TextNode("`this is code`", TextType.Code)
         hnode = text_node_to_html_node(tnode)
         node_html = hnode.to_html()
         target_html = "<code>this is code</code>"
@@ -60,50 +55,48 @@ this is code
         self.assertEqual(node_html, target_html)
 
     def test_split_delimeter(self):
-        #TODO implement regex search to find delimeters, bold specifically
-        tnode = TextNode("This is text with a **bold** block", TextType.Text)
-        new_nodes = split_nodes_delimeter([tnode], "**", TextType.Bold)
-        expected = [TextNode('This', TextType.Text, None),
-                    TextNode('is', TextType.Text, None),
-                    TextNode('text', TextType.Text, None),
-                    TextNode('with', TextType.Text, None),
-                    TextNode('a', TextType.Text, None),
-                    TextNode('bold', TextType.Bold, None),
-                    TextNode('block', TextType.Text, None)]
+        tnode = TextNode("This `is` text with a `code` block", TextType.Text)
+        new_nodes = split_nodes_delimeter([tnode], delimeter='`', text_type=TextType.Code)
+        correct_nodes = [TextNode('This ', TextType.Text, None),
+                         TextNode('is', TextType.Code, None),
+                         TextNode(' text with a ', TextType.Text, None),
+                         TextNode('code', TextType.Code, None),
+                         TextNode(' block', TextType.Text, None)]
 
-        self.assertEqual(new_nodes, expected)
+        self.assertEqual(new_nodes, correct_nodes)
 
-        tnode = TextNode("This is text with an *italic* block", TextType.Text)
-        new_nodes = split_nodes_delimeter([tnode], "*", TextType.Italic)
-        expected = [TextNode('This', TextType.Text, None),
-                    TextNode('is', TextType.Text, None),
-                    TextNode('text', TextType.Text, None),
-                    TextNode('with', TextType.Text, None),
-                    TextNode('an', TextType.Text, None),
-                    TextNode('italic', TextType.Italic, None),
-                    TextNode('block', TextType.Text, None)]
+        tnode = TextNode("This *is* text with an *italic* block", TextType.Text)
+        new_nodes = split_nodes_delimeter([tnode], delimeter='*', text_type=TextType.Italic)
+        correct_nodes = [TextNode('This ', TextType.Text, None),
+                         TextNode('is', TextType.Italic, None),
+                         TextNode(' text with an ', TextType.Text, None),
+                         TextNode('italic', TextType.Italic, None),
+                         TextNode(' block', TextType.Text, None)]
 
-        self.assertEqual(new_nodes, expected)
-        
-        tnode = TextNode("This is text with a `code` block", TextType.Text)
-        new_nodes = split_nodes_delimeter([tnode], '`', TextType.Code)
-        expected = [TextNode('This', TextType.Text, None),
-                    TextNode('is', TextType.Text, None),
-                    TextNode('text', TextType.Text, None),
-                    TextNode('with', TextType.Text, None),
-                    TextNode('a', TextType.Text, None),
-                    TextNode('code', TextType.Code, None),
-                    TextNode('block', TextType.Text, None)]
+        self.assertEqual(new_nodes, correct_nodes)
 
+        tnode = TextNode("This **is** text with a **bold** block", TextType.Text)
+        new_nodes = split_nodes_delimeter([tnode], delimeter='**', text_type=TextType.Bold)
+        correct_nodes = [TextNode('This ', TextType.Text, None),
+                         TextNode('is', TextType.Bold, None),
+                         TextNode(' text with a ', TextType.Text, None),
+                         TextNode('bold', TextType.Bold, None),
+                         TextNode(' block', TextType.Text, None)]
 
-        # self.assertEqual(new_nodes, expected)
-        # tnode = TextNode("This *is* **mixed** text with a `code` block", TextType.Text)
-        # new_nodes = split_nodes_delimeter([tnode], '`', TextType.Code)
-        # print("New nodes after code: " + str(new_nodes))
-        # new_nodes = split_nodes_delimeter(new_nodes, '*', TextType.Italic)
-        # print("New nodes after italic: " + str(new_nodes))
-        # new_nodes = split_nodes_delimeter(new_nodes, '**', TextType.Bold)
-        # print("New nodes after bold: " + str(new_nodes))
+        self.assertEqual(new_nodes, correct_nodes)
+
+        tnode = TextNode("This *is* **text** with `mixed` types", TextType.Text)
+        new_nodes = split_nodes_delimeter([tnode], delimeter='**', text_type=TextType.Bold)
+        new_nodes = split_nodes_delimeter(new_nodes, delimeter='*', text_type=TextType.Italic)
+        new_nodes = split_nodes_delimeter(new_nodes, delimeter='`', text_type=TextType.Code)
+        correct_nodes = [TextNode('This ', TextType.Text, None),
+                         TextNode('is', TextType.Italic, None),
+                         TextNode(' ', TextType.Text, None),
+                         TextNode('text', TextType.Bold, None),
+                         TextNode(' with ', TextType.Text, None),
+                         TextNode('mixed', TextType.Code, None),
+                         TextNode(' types', TextType.Text, None)]
+        self.assertEqual(new_nodes, correct_nodes)
 
 class TestIndexing(unittest.TestCase):
     def test_indexing(self):
@@ -113,6 +106,18 @@ class TestIndexing(unittest.TestCase):
         # split_text = split_by_md_syntax(tnode.text, pairs)
         split_text = split_by_md_syntax(tnode.text, indices)
         correct_text = ['This ', '`is`', ' text with a ', '`code`', ' block']
+        self.assertEqual(split_text, correct_text)
+
+        tnode = TextNode("This is **text** with a **bold** block", TextType.Text)
+        indices = get_indexes(text=tnode.text, delimeter='**')
+        split_text = split_by_md_syntax(tnode.text, indices)
+        correct_text = ['This is ', '**text**',' with a ', '**bold**', ' block']
+        self.assertEqual(split_text, correct_text)
+
+        tnode = TextNode("This is *text* with an *italic* block", TextType.Text)
+        indices = get_indexes(text=tnode.text, delimeter='*')
+        split_text = split_by_md_syntax(tnode.text, indices)
+        correct_text = ['This is ', '*text*',' with an ', '*italic*', ' block']
         self.assertEqual(split_text, correct_text)
 
 if __name__ == "__main__":

@@ -27,8 +27,8 @@ class LeafNode(HTMLNode):
         super().__init__(tag=tag, value=value, children=None, props=props)
     
     def to_html(self):
-        void_elements = ["img"]
-        closing_tag = f"</{self.tag}>" if self.tag not in void_elements else ''
+        self_closing_elements = ["img"]
+        closing_tag = f"</{self.tag}>" if self.tag not in self_closing_elements else ''
         if self.tag is None:
             return self.value
         return f"<{self.tag}{self.props_to_html()}>{self.value}{closing_tag}"

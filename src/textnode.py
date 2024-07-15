@@ -13,7 +13,12 @@ class TextType(Enum):
 
 class TextNode():
     def __init__(self, text:str, text_type:TextType, url=None):
-        self.text = text
+        delimeter_by_text_type = {TextType.Bold : '**', TextType.Code : '`', TextType.Italic : '*'}
+        if text_type in delimeter_by_text_type:
+            delimeter = delimeter_by_text_type[text_type]
+            self.text = text.replace(delimeter, '')
+        else:
+            self.text = text
         self.text_type = text_type
         self.url = url
 
@@ -68,7 +73,7 @@ def prep_inline_img(text):
 
 
 def split_nodes_delimeter(old_nodes:List[TextNode], delimeter:str, text_type:TextType):
-    delimeter_types = {"*" : TextType.Italic, "**" : TextType.Bold, '`' : TextType.Code}
+    text_type_by_delimeter = {"*" : TextType.Italic, "**" : TextType.Bold, '`' : TextType.Code}
     result:List[TextNode] = []
     for node in old_nodes:
         if node.text_type != TextType.Text:
@@ -76,26 +81,33 @@ def split_nodes_delimeter(old_nodes:List[TextNode], delimeter:str, text_type:Tex
             continue
         
         indices = get_indexes(node.text, delimeter)
-        if len(indices) // 2 != 0:
+        if len(indices) % 2 != 0:
             last_index = indices[-1]
             print(f"Unclosed markdown tag: {node.text[last_index:]} ")
 
         strings = split_by_md_syntax(node.text, indices)
-        result.extend([TextNode(s, delimeter_types[delimeter], None) for s in strings])
+        for s in strings:
+            if delimeter in s:
+                result.append(TextNode(s, text_type_by_delimeter[delimeter], None))
+            else:
+                result.append(TextNode(s, TextType.Text, None))
+        # result.extend([TextNode(s, text_type_by_delimeter[delimeter], None) for s in strings])
     return result
 
 
 def get_indexes(text, delimeter):
+    patterns = {'**' : r'\*\*', '*' : r'\*', '`' : '`'}
+    offsets = {'**' : 2, '*' : 1, '`' : 1}
+    pat = patterns[delimeter]
+    offset = offsets[delimeter]
     result = []
-    for index, letter in enumerate(text):
-        if letter == delimeter:
-            start = index
-            end = index + 1
-            if len(result) % 2 == 0:
-                result.append(start)
-            else:
-                result.append(end)
-
+    for match in re.finditer(pat, text):
+        start = match.start()
+        end = match.start() + offset
+        if len(result) % 2 == 0:
+            result.append(start)
+        else:
+            result.append(end)
     result.insert(0,0)
     result.append(len(text))
     return result

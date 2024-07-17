@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, final
 from htmlnode import HTMLNode, LeafNode
 from enum import Enum
 import re
@@ -86,6 +86,9 @@ def split_nodes_delimeter(old_nodes:List[TextNode], delimeter:str, text_type:Tex
             print(f"Unclosed markdown tag: {node.text[last_index:]} ")
 
         strings = split_by_md_syntax(node.text, indices)
+        if not strings:
+            result.append(node)
+            continue
         for s in strings:
             if delimeter in s:
                 result.append(TextNode(s, text_type_by_delimeter[delimeter], None))
@@ -93,6 +96,106 @@ def split_nodes_delimeter(old_nodes:List[TextNode], delimeter:str, text_type:Tex
                 result.append(TextNode(s, TextType.Text, None))
         # result.extend([TextNode(s, text_type_by_delimeter[delimeter], None) for s in strings])
     return result
+
+def split_nodes_img(old_nodes:List[TextNode]) -> List[TextNode]:
+    pat_alt = r'\!\[(.*?)\]'
+    pat_link = r"\((.*?)\)"
+    result = []
+    for node in old_nodes:
+        if node.text_type != TextType.Text:
+            result.append(node)
+            continue
+        indices_alt = []
+        for match in re.finditer(pat_alt, node.text):
+            start = match.start()
+            end = match.end()
+            indices_alt.append(start)
+
+        indices_link = []
+        for match in re.finditer(pat_link, node.text):
+            start = match.start()
+            end = match.end()
+            indices_link.append(end)
+        
+        final_indices = []
+        for i in range(0, len(indices_alt)):
+            final_indices.append(indices_alt[i])
+            final_indices.append(indices_link[i])
+
+        if(len(final_indices)) % 2 != 0:
+            raise RuntimeError(f"Unclosed tag: {node.text[final_indices[-1]:]}")
+        # final_indices = list(zip(indices_alt, indices_link))
+        final_indices.insert(0, 0)
+        final_indices.append(len(node.text))
+        for i in range (0,len(final_indices)):
+            start = final_indices[i]
+            try:
+                end = final_indices[i+1]
+            except IndexError:
+                break
+            s = node.text[start:end]
+            full_img_pat = r'\!\[(.*?)\]\((.*?)\)'
+            match = re.search(full_img_pat, s)
+            if match:
+                alt = match.group(1)
+                link = match.group(2)
+                result.append(TextNode(alt, TextType.Image, url=link))
+            else:
+                result.append(TextNode(s, TextType.Text))
+        
+    return result
+
+
+def split_nodes_link(old_nodes:List[TextNode]) -> List[TextNode]:
+    pat_alt = r'\[(.*?)\]'
+    pat_link = r"\((.*?)\)"
+    result = []
+    for node in old_nodes:
+        if node.text_type != TextType.Text:
+            result.append(node)
+            continue
+        indices_alt = []
+        for match in re.finditer(pat_alt, node.text):
+            start = match.start()
+            end = match.end()
+            indices_alt.append(start)
+
+        indices_link = []
+        for match in re.finditer(pat_link, node.text):
+            start = match.start()
+            end = match.end()
+            indices_link.append(end)
+        
+        final_indices = []
+        for i in range(0, len(indices_alt)):
+            final_indices.append(indices_alt[i])
+            final_indices.append(indices_link[i])
+
+        if(len(final_indices)) % 2 != 0:
+            raise RuntimeError(f"Unclosed tag: {node.text[final_indices[-1]:]}")
+        # final_indices = list(zip(indices_alt, indices_link))
+        final_indices.insert(0, 0)
+        final_indices.append(len(node.text))
+        for i in range (0,len(final_indices)):
+            start = final_indices[i]
+            try:
+                end = final_indices[i+1]
+            except IndexError:
+                break
+            s = node.text[start:end]
+            if s != '':
+                full_img_link = r'\[(.*?)\]\((.*?)\)'
+                match = re.search(full_img_link, s)
+                if match:
+                    alt = match.group(1)
+                    link = match.group(2)
+                    result.append(TextNode(alt, TextType.Link, url=link))
+                else:
+                    result.append(TextNode(s, TextType.Text))
+        
+    return result
+
+
 
 
 def get_indexes(text, delimeter):
@@ -108,8 +211,9 @@ def get_indexes(text, delimeter):
             result.append(start)
         else:
             result.append(end)
-    result.insert(0,0)
-    result.append(len(text))
+    if len(result) > 0:
+        result.insert(0,0)
+        result.append(len(text))
     return result
 
 def pair_indexes(indexes:list, text_length) -> list:
@@ -139,6 +243,15 @@ def split_by_md_syntax(text, indices:List[int]) -> List[str]:
         start = indices[i]
         s = text[start:end]
         result.append(s)
+    return result
+
+def text_to_text_nodes(text):
+    result = []
+    result = split_nodes_delimeter([TextNode(text, TextType.Text, None)], '**', TextType.Bold)
+    result = split_nodes_delimeter(result, '*', TextType.Italic)
+    result = split_nodes_delimeter(result, '`', TextType.Code)
+    result = split_nodes_img(result)
+    result = split_nodes_link(result)
     return result
 # def md_strip(text:str, pat) -> str:
 #     value = map(lambda a: a.strip(pat), text.split(' '))

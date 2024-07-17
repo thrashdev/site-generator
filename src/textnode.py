@@ -11,6 +11,14 @@ class TextType(Enum):
     Link = 5
     Image = 6
 
+class MarkdownBlockType(Enum):
+    Heading = 1
+    Paragraph = 2
+    Code = 3
+    Quote = 4
+    Unordered_List = 5
+    Ordered_List = 6
+
 class TextNode():
     def __init__(self, text:str, text_type:TextType, url=None):
         delimeter_by_text_type = {TextType.Bold : '**', TextType.Code : '`', TextType.Italic : '*'}
@@ -253,6 +261,47 @@ def text_to_text_nodes(text):
     result = split_nodes_img(result)
     result = split_nodes_link(result)
     return result
+
+def split_blocks(text):
+        blocks = text.split('\n')
+        blocks = list(map(str.strip, blocks))
+        result = []
+        temp = []
+        for b in blocks:
+            if b == '' or b == '\n':
+                if temp != []: 
+                    result.append(temp)
+                temp = []
+            else:
+                temp.append(b)
+
+        return result
+
+def block_to_block_type(block:List[str]) -> MarkdownBlockType:
+    fchars_to_type = {'#' : MarkdownBlockType.Heading, '*' : MarkdownBlockType.Unordered_List, '-': MarkdownBlockType.Unordered_List, '>' : MarkdownBlockType.Quote }
+    first_chars = [v[0] for v in block]
+    first_chars = list(set(first_chars))
+    if len(first_chars) == 1:
+        fchar = first_chars[0]
+        if fchar in fchars_to_type:
+            return fchars_to_type[fchar]
+        else:
+            return MarkdownBlockType.Paragraph
+
+    if len(first_chars) > 2:
+        if all(ch.isdigit() for ch in first_chars):
+            for i, v in enumerate(first_chars):
+                if (v != (i+1)):
+                    return MarkdownBlockType.Paragraph
+                
+            return MarkdownBlockType.Ordered_List
+        else:
+            return MarkdownBlockType.Paragraph
+    
+    
+    
+
+
 # def md_strip(text:str, pat) -> str:
 #     value = map(lambda a: a.strip(pat), text.split(' '))
 #     value = ' '.join(list(value))

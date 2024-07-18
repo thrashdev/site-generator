@@ -185,6 +185,14 @@ This is a paragraph of text. It has some **bold** and *italic* words inside of i
 * This is the first list item in a list block
 * This is a list item
 * This is another list item
+
+1. This is 
+2. an
+3. Ordered List
+
+```
+this is a code block
+```
 """
         blocks = split_blocks(text)
         block_types = []

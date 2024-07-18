@@ -278,25 +278,35 @@ def split_blocks(text):
         return result
 
 def block_to_block_type(block:List[str]) -> MarkdownBlockType:
-    fchars_to_type = {'#' : MarkdownBlockType.Heading, '*' : MarkdownBlockType.Unordered_List, '-': MarkdownBlockType.Unordered_List, '>' : MarkdownBlockType.Quote }
-    first_chars = [v[0] for v in block]
-    first_chars = list(set(first_chars))
-    if len(first_chars) == 1:
-        fchar = first_chars[0]
-        if fchar in fchars_to_type:
-            return fchars_to_type[fchar]
-        else:
+    available_tags = ['#', '*', '-', '>']
+    tags_to_type = {'#' : MarkdownBlockType.Heading, '*' : MarkdownBlockType.Unordered_List, '-': MarkdownBlockType.Unordered_List, '>' : MarkdownBlockType.Quote }
+    tags = [v[0] for v in block]
+    tags = list(set(tags))
+
+    first_line = block[0]
+    if '# ' in first_line:
+        count = first_line.count('#')
+        if count in range (1,7):
+            return MarkdownBlockType.Heading
+
+    if all(ch == '`' for ch in block[0]) and all(ch == '`' for ch in block[-1]):
+        return MarkdownBlockType.Code
+
+    # if len(tags) == 1:
+    #     tag = tags[0]
+    #     if tag not in tags_to_type:
+    #         return MarkdownBlockType.Paragraph
+    #     return tags_to_type[tag]
+
+    if len(tags) > 1:
+        if not all(ch.isdigit() for ch in tags):
             return MarkdownBlockType.Paragraph
 
-    if len(first_chars) > 2:
-        if all(ch.isdigit() for ch in first_chars):
-            for i, v in enumerate(first_chars):
-                if (v != (i+1)):
-                    return MarkdownBlockType.Paragraph
-                
-            return MarkdownBlockType.Ordered_List
-        else:
-            return MarkdownBlockType.Paragraph
+        for i, v in enumerate(tags):
+            if (int(v) != (i+1)):
+                return MarkdownBlockType.Paragraph
+            
+        return MarkdownBlockType.Ordered_List
     
     
     

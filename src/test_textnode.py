@@ -193,6 +193,11 @@ This is a paragraph of text. It has some **bold** and *italic* words inside of i
 ```
 this is a code block
 ```
+
+> this
+> is
+> a
+> quote
 """
         blocks = split_blocks(text)
         block_types = []

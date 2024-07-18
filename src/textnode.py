@@ -292,23 +292,23 @@ def block_to_block_type(block:List[str]) -> MarkdownBlockType:
     if all(ch == '`' for ch in block[0]) and all(ch == '`' for ch in block[-1]):
         return MarkdownBlockType.Code
 
-    # if len(tags) == 1:
-    #     tag = tags[0]
-    #     if tag not in tags_to_type:
-    #         return MarkdownBlockType.Paragraph
-    #     return tags_to_type[tag]
+    if len(tags) == 1:
+        tag = tags[0]
+        if tag not in tags_to_type:
+            return MarkdownBlockType.Paragraph
+        return tags_to_type[tag]
 
     if len(tags) > 1:
         if not all(ch.isdigit() for ch in tags):
             return MarkdownBlockType.Paragraph
 
-        for i, v in enumerate(tags):
-            if (int(v) != (i+1)):
+        for index, line in enumerate(block):
+            if (line[0:3] != f"{index + 1}. "):
                 return MarkdownBlockType.Paragraph
-            
+        
         return MarkdownBlockType.Ordered_List
     
-    
+    return MarkdownBlockType.Paragraph
     
 
 

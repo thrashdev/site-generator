@@ -1,4 +1,6 @@
+from re import fullmatch
 import unittest
+import os
 
 from textnode import TextNode, TextType, block_to_block_type, get_indexes, pair_indexes, split_blocks, split_by_md_syntax, split_nodes_img, split_nodes_link, text_node_to_html_node, split_nodes_delimeter, text_to_text_nodes
 
@@ -204,5 +206,16 @@ this is a code block
         for block in blocks:
             block_types.append((block, block_to_block_type(block)))
         print(block_types)
+
+class TestFullMDToHTML(unittest.TestCase):
+    def test_full_md_to_html(self):
+        dir_path = os.path.dirname(__file__)
+        md_filepath = '../markdown/test_file.md'
+        full_path = os.path.join(dir_path, md_filepath)
+        with open(full_path, 'r') as f:
+            markdown = f.read()
+
+        print(markdown)
+
 if __name__ == "__main__":
     unittest.main()

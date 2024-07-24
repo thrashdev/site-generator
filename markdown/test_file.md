@@ -1,5 +1,4 @@
-An h1 header
-============
+# An h1 header
 
 Paragraphs are separated by a blank line.
 
@@ -8,9 +7,9 @@ Paragraphs are separated by a blank line.
 *Italic*, **bold**, and `monospace`. Itemized lists
 look like:
 
-  * this one
-  * that one
-  * the other one
+* this one
+* that one
+* the other one
 
 > Block quotes are
 > written like so.
@@ -18,8 +17,7 @@ look like:
 > They can span multiple paragraphs,
 > if you like.
 
-An h2 header
-------------
+## An h2 header
 
 Here's a numbered list:
 
@@ -27,12 +25,10 @@ Here's a numbered list:
  2. second item
  3. third item
 
-### An h3 header ###
+### An h3 header
 
 
 Here's a link to [a website](http://foo.bar)
 
-
 and images can be specified like so:
-
 ![example image](example-image.jpg "An exemplary image")

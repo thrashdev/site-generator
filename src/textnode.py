@@ -1,5 +1,5 @@
 from typing import List, final
-from htmlnode import HTMLNode, LeafNode
+from htmlnode import HTMLNode, LeafNode, ParentNode
 from enum import Enum
 import re
 
@@ -36,7 +36,7 @@ class TextNode():
     def __repr__(self) -> str:
         return f"TextNode({self.text}, {self.text_type}, {self.url})"
 
-def text_node_to_html_node(text_node:TextNode):
+def text_node_to_html_node(text_node:TextNode)-> LeafNode:
     match text_node.text_type:
         case TextType.Text:
             return LeafNode(value=text_node.text)
@@ -253,7 +253,7 @@ def split_by_md_syntax(text, indices:List[int]) -> List[str]:
         result.append(s)
     return result
 
-def text_to_text_nodes(text):
+def text_to_text_nodes(text) -> List[TextNode]:
     result = []
     result = split_nodes_delimeter([TextNode(text, TextType.Text, None)], '**', TextType.Bold)
     result = split_nodes_delimeter(result, '*', TextType.Italic)
@@ -310,8 +310,33 @@ def block_to_block_type(block:List[str]) -> MarkdownBlockType:
     
     return MarkdownBlockType.Paragraph
     
+def block_to_html(block, block_type:MarkdownBlockType):
+    match block_type:
+        case MarkdownBlockType.Heading:
+            heading_number = block[0].count('#')
+            block_tag = f"h{heading_number}"
+        case MarkdownBlockType.Paragraph:
+            block_tag = "p"
+        case MarkdownBlockType.Code:
+            block_tag = "code"
+        case MarkdownBlockType.Quote:
+            block_tag = "blockquote"
+        case MarkdownBlockType.Unordered_List:
+            block_tag = "ul"
+        case MarkdownBlockType.Ordered_List:
+            block_tag = "ol"
+    children = text_to_children(block)
+    result = ParentNode(block_tag, children, {})
+    return result
 
+def text_to_children(block):
+    result = []
+    for line in block:
+        tnodes = text_to_text_nodes(line)
+        for node in tnodes:
+            result.append(text_node_to_html_node(node))
 
+    return result
 # def md_strip(text:str, pat) -> str:
 #     value = map(lambda a: a.strip(pat), text.split(' '))
 #     value = ' '.join(list(value))

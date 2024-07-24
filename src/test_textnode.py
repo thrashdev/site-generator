@@ -1,6 +1,6 @@
-from re import fullmatch
 import unittest
 import os
+from textnode import MarkdownBlockType, block_to_html
 
 from textnode import TextNode, TextType, block_to_block_type, get_indexes, pair_indexes, split_blocks, split_by_md_syntax, split_nodes_img, split_nodes_link, text_node_to_html_node, split_nodes_delimeter, text_to_text_nodes
 
@@ -202,10 +202,17 @@ this is a code block
 > quote
 """
         blocks = split_blocks(text)
-        block_types = []
+        blocks_typed = []
         for block in blocks:
-            block_types.append((block, block_to_block_type(block)))
-        print(block_types)
+            blocks_typed.append((block, block_to_block_type(block)))
+
+        # expected = [(['# This is a heading'], <MarkdownBlockType.Heading: 1>), (['This is a paragraph of text. It has some **bold** and *italic* words inside of it.'], <MarkdownBlockType.Paragraph: 2>), (['* This is the first list item in a list block', '* This is a list item', '* This is another list item'], <MarkdownBlockType.Unordered_List: 5>), (['1. This is', '2. an', '3. Ordered List'], <MarkdownBlockType.Ordered_List: 6>), (['```', 'this is a code block', '```'], <MarkdownBlockType.Code: 3>), (['> this', '> is', '> a', '> quote'], <MarkdownBlockType.Quote: 4>)]
+        expected = [(['# This is a heading'], MarkdownBlockType.Heading),
+                    (['This is a paragraph of text. It has some **bold** and *italic* words inside of it.'], MarkdownBlockType.Paragraph),
+                    (['* This is the first list item in a list block', '* This is a list item', '* This is another list item'], MarkdownBlockType.Unordered_List),
+                    (['1. This is', '2. an', '3. Ordered List'], MarkdownBlockType.Ordered_List), (['```', 'this is a code block', '```'], MarkdownBlockType.Code),
+                    (['> this', '> is', '> a', '> quote'], MarkdownBlockType.Quote)]
+        self.assertEqual(blocks_typed, expected)
 
 class TestFullMDToHTML(unittest.TestCase):
     def test_full_md_to_html(self):
@@ -214,8 +221,16 @@ class TestFullMDToHTML(unittest.TestCase):
         full_path = os.path.join(dir_path, md_filepath)
         with open(full_path, 'r') as f:
             markdown = f.read()
+        
+        blocks = split_blocks(markdown)
+        blocks_typed = [(x, block_to_block_type(x)) for x in blocks]
 
-        print(markdown)
+        html_blocks = []
+        for block, block_type in blocks_typed:
+            html_blocks.append(block_to_html(block, block_type))
+
+        for i in html_blocks:
+            print(i.to_html())
 
 if __name__ == "__main__":
     unittest.main()

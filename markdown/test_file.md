@@ -27,8 +27,13 @@ Here's a numbered list:
 
 ### An h3 header
 
+Code block:
+
+```
+print('Hello world!')
+```
 
 Here's a link to [a website](http://foo.bar)
 
 and images can be specified like so:
-![example image](example-image.jpg "An exemplary image")
+![example image](example-image.jpg)

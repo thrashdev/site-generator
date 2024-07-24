@@ -31,6 +31,7 @@ Code block:
 
 ```
 print('Hello world!')
+console.log('Hello world!')
 ```
 
 Here's a link to [a website](http://foo.bar)

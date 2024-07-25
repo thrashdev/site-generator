@@ -2,7 +2,7 @@ import unittest
 import os
 from textnode import MarkdownBlockType, block_to_html
 
-from textnode import TextNode, TextType, block_to_block_type, get_indexes, pair_indexes, split_blocks, split_by_md_syntax, split_nodes_img, split_nodes_link, text_node_to_html_node, split_nodes_delimeter, text_to_text_nodes
+from textnode import TextNode, TextType, block_to_block_type, get_indexes, pair_indexes, split_blocks, split_by_md_syntax, split_nodes_img, split_nodes_link, text_node_to_html_node, split_nodes_delimeter, text_to_text_nodes, ParentNode
 
 class TestTextNode(unittest.TestCase):
     def test_eq(self):
@@ -35,20 +35,20 @@ class TestTextNode(unittest.TestCase):
         target_html = "<code>this is code</code>"
         self.assertEqual(node_html, target_html)
 
-        tnode = TextNode("[link](https://www.google.com)", TextType.Link)
+        tnode = TextNode("link", TextType.Link, url="https://www.google.com")
         hnode = text_node_to_html_node(tnode)
         node_html = hnode.to_html()
         target_html = '<a href="https://www.google.com">link</a>'
         self.assertEqual(node_html, target_html)
 
-        tnode = TextNode("![alt text for image](https://www.google.com)", TextType.Image)
+        tnode = TextNode("alt text for image", TextType.Image, 'https://www.google.com')
         hnode = text_node_to_html_node(tnode)
         node_html = hnode.to_html()
         target_html = '<img src="https://www.google.com" alt="alt text for image">'
         self.assertEqual(node_html, target_html)
 
     def test_texttype(self):
-        tnode = TextNode("[link](https://www.google.com)", TextType.Link)
+        tnode = TextNode("link", TextType.Link, url="https://www.google.com")
         hnode = text_node_to_html_node(tnode)
         node_html = hnode.to_html()
         target_html = '<a href="https://www.google.com">link</a>'
@@ -216,6 +216,7 @@ this is a code block
 
 class TestFullMDToHTML(unittest.TestCase):
     def test_full_md_to_html(self):
+        self.maxDiff = None
         dir_path = os.path.dirname(__file__)
         md_filepath = '../markdown/test_file.md'
         full_path = os.path.join(dir_path, md_filepath)
@@ -228,9 +229,19 @@ class TestFullMDToHTML(unittest.TestCase):
         html_blocks = []
         for block, block_type in blocks_typed:
             html_blocks.append(block_to_html(block, block_type))
+         
+        # html_blocks = ParentNode("div", html_blocks)
+        parent_html_block = ParentNode("div", html_blocks)
+        final_html = parent_html_block.to_html()
+        # for b in html_blocks:
+        #     final_html.append(b.to_html())
+        
 
-        for i in html_blocks:
-            print(i.to_html())
+        expected_html = "<div><h1>An h1 header</h1><p>Paragraphs are separated by a blank line.</p><p>2nd paragraph.</p><p><i>Italic</i>, <b>bold</b>, and <code>monospace</code>. Itemized listslook like:</p><ul><li>this one</li><li>that one</li><li>the other one</li></ul><blockquote>Block quotes arewritten like so.They can span multiple paragraphs,if you like.</blockquote><h2>An h2 header</h2><p>Here's a numbered list:</p><ol><li>first item</li><li>second item</li><li>third item</li></ol><h3>An h3 header</h3><p>Code block:</p><pre><code>print('Hello world!')console.log('Hello world!')</code></pre><p>Here's a link to <a href=\"http://foo.bar\">a website</a></p><p>and images can be specified like so:<img src=\"example-image.jpg\" alt=\"example image\"></p></div>"
+        
+
+        self.assertEqual(final_html, expected_html)
+
 
 if __name__ == "__main__":
     unittest.main()

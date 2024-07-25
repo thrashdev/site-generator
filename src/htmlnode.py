@@ -34,7 +34,7 @@ class LeafNode(HTMLNode):
         return f"<{self.tag}{self.props_to_html()}>{self.value}{closing_tag}"
 
 class ParentNode(HTMLNode):
-    def __init__(self, tag, children, props: dict = {}) -> None:
+    def __init__(self, tag, children:list, props: dict = {}) -> None:
         assert(tag is not None)
         assert(children is not None)
         assert(children != {})

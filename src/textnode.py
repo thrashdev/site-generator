@@ -1,4 +1,4 @@
-from typing import List, final
+from typing import List
 from htmlnode import HTMLNode, LeafNode, ParentNode
 from enum import Enum
 import re
@@ -49,14 +49,11 @@ def text_node_to_html_node(text_node:TextNode)-> LeafNode:
             value = text_node.text.strip(md_italic)
             return LeafNode(tag="i", value=value)
         case TextType.Code:
-            value = prep_inline_code(text_node.text)
-            return LeafNode(tag="code", value=value)
+            return LeafNode(tag="code", value=text_node.text)
         case TextType.Link:
-            alt, link = prep_inline_link(text_node.text)
-            return LeafNode(tag="a", value=alt, props={"href" : link})
+            return LeafNode(tag="a", value=text_node.text, props={"href" : text_node.url})
         case TextType.Image:
-            alt, link = prep_inline_img(text_node.text)
-            return LeafNode(tag="img", value='', props={"src" : link, "alt" : alt})
+            return LeafNode(tag="img", value='', props={"src" : text_node.url, "alt" : text_node.text})
         case _:
             raise ValueError("Submitted text node's text type is not in the list of supported text types")
 
@@ -98,10 +95,12 @@ def split_nodes_delimeter(old_nodes:List[TextNode], delimeter:str, text_type:Tex
             result.append(node)
             continue
         for s in strings:
-            if delimeter in s:
-                result.append(TextNode(s, text_type_by_delimeter[delimeter], None))
-            else:
-                result.append(TextNode(s, TextType.Text, None))
+            if s != '':
+                if delimeter in s:
+                    result.append(TextNode(s, text_type_by_delimeter[delimeter], None))
+                else:
+                    result.append(TextNode(s, TextType.Text, None))
+
         # result.extend([TextNode(s, text_type_by_delimeter[delimeter], None) for s in strings])
     return result
 
@@ -311,21 +310,33 @@ def block_to_block_type(block:List[str]) -> MarkdownBlockType:
     return MarkdownBlockType.Paragraph
     
 def block_to_html(block, block_type:MarkdownBlockType):
+    text = block
     match block_type:
         case MarkdownBlockType.Heading:
-            heading_number = block[0].count('#')
+            heading_number = text[0].count('#')
+            heading_string = '#' * heading_number + ' '
             block_tag = f"h{heading_number}"
+            text = list(map(lambda s: s.replace(heading_string, ''), text))
         case MarkdownBlockType.Paragraph:
             block_tag = "p"
         case MarkdownBlockType.Code:
             block_tag = "code"
+            text = [x  for x in text if '`' not in x]
+            children = text_to_children(text)
+            return ParentNode("pre", [ParentNode(block_tag, children, {})], {})
         case MarkdownBlockType.Quote:
             block_tag = "blockquote"
+            text = list(map(lambda s: s.replace('> ', ''), text))
+            text = list(map(lambda s: s.replace('>', ''), text))
         case MarkdownBlockType.Unordered_List:
             block_tag = "ul"
+            text = list(map(lambda s: s.replace('* ', ''), text))
+            text = list(map(lambda s: "<li>" + s + "</li>", text))
         case MarkdownBlockType.Ordered_List:
             block_tag = "ol"
-    children = text_to_children(block)
+            text = list(map(lambda s: s[3:], text))
+            text = list(map(lambda s: "<li>" + s + "</li>", text))
+    children = text_to_children(text)
     result = ParentNode(block_tag, children, {})
     return result
 

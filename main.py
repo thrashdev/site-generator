@@ -1,4 +1,6 @@
 import os
+import shutil
+import re
 rootdir = os.path.dirname(os.path.realpath(__file__))
 pub_dir = os.path.join(rootdir, 'public')
 static_dir = os.path.join(rootdir, 'static')
@@ -54,15 +56,33 @@ def copy_files(src, dst, current_path=""):
         print(f"Copying {s} to {d}")
 
 
-def copy_folders(src, dst):
-    pass
+def copy_folders(src, dst, current_path=""):
+    if os.path.isdir(src):
+        folder_name = os.path.basename(os.path.normpath(src))
+        # dest_path = os.path.join(dst,current_path)
+        # dest_path = os.path.join(dest_path, folder_name)
+        # print(dest_path)
+        contents = os.listdir(src)
+        for item in contents:
+            item_path = os.path.join(src, item) 
+            dst_path = os.path.join(dst, item)
+            res = re.search('static', str(src))
+            folder_name = os.path.basename(os.path.normpath(src))
+            spath = item_path[res.end():].strip('/')
+            dest_path = os.path.join(dst, spath)
+            # if os.path.isdir(dest_path):
+            if os.path.isdir(item_path):
+                # copy_files(item_path, dst, item)
+                print(dest_path)
+                copy_folders(item_path, dst_path, spath)
 
 def copy_to_destination(src, dst):
     copy_folders(src, dst)
-    copy_files(src,dst)
+    # copy_files(src,dst)
 
 if __name__ == '__main__':
     # print(pub_dir)
-    clean_destination(pub_dir)
+    # clean_destination(pub_dir)
     print("======================================")
-    copy_files(static_dir, pub_dir)
+    # copy_files(static_dir, pub_dir)
+    copy_folders(static_dir, pub_dir)

@@ -13,19 +13,17 @@ static_dir = os.path.join(rootdir, 'static')
 #     else:
 #         os.remove(item)
 
-def clean_destination(dest_path, current_path=""):
+def clean_destination(dest_path):
     if os.path.isdir(dest_path):
         contents = os.listdir(dest_path)
         for item in contents:
             item_path = os.path.join(dest_path, item) 
             if os.path.isdir(item_path):
-                clean_destination(item_path, item)
+                print(f'Removing directory {item_path}')
+                shutil.rmtree(item_path)
             else:
-                print(item_path)
-        print(dest_path)
-    else:
-        p = os.path.join(dest_path, current_path)
-        print(p)
+                print(f"Removing file {item_path}")
+                os.remove(item_path)
 
 # def list_files(current_filetree, current_path=""):
 #     paths = []
@@ -45,44 +43,34 @@ def copy_files(src, dst, current_path=""):
         for item in contents:
             item_path = os.path.join(src, item) 
             dst_path = os.path.join(dst, item)
+            new_path = current_path + f'/{item}'
             if os.path.isdir(item_path):
-                copy_files(item_path, dst, item)
+                copy_files(item_path, dst_path, new_path)
             else:
                 print(f"Copying {item_path} to {dst_path}")
-        print(f"Creating {src} in {dst}")
-    else:
-        s = os.path.join(src, current_path)
-        d = os.path.join(src, current_path)
-        print(f"Copying {s} to {d}")
+                shutil.copy(item_path, dst_path)
 
 
 def copy_folders(src, dst, current_path=""):
     if os.path.isdir(src):
-        folder_name = os.path.basename(os.path.normpath(src))
-        # dest_path = os.path.join(dst,current_path)
-        # dest_path = os.path.join(dest_path, folder_name)
-        # print(dest_path)
         contents = os.listdir(src)
         for item in contents:
             item_path = os.path.join(src, item) 
             dst_path = os.path.join(dst, item)
-            res = re.search('static', str(src))
-            folder_name = os.path.basename(os.path.normpath(src))
-            spath = item_path[res.end():].strip('/')
-            dest_path = os.path.join(dst, spath)
-            # if os.path.isdir(dest_path):
+            new_path = current_path + f'/{item}'
             if os.path.isdir(item_path):
-                # copy_files(item_path, dst, item)
-                print(dest_path)
-                copy_folders(item_path, dst_path, spath)
+                os.mkdir(dst_path)
+                print(dst_path)
+                copy_folders(item_path, dst_path, new_path)
 
 def copy_to_destination(src, dst):
     copy_folders(src, dst)
-    # copy_files(src,dst)
+    copy_files(src,dst)
 
 if __name__ == '__main__':
-    # print(pub_dir)
-    # clean_destination(pub_dir)
+    clean_destination(pub_dir)
+    # shutil.rmtree(pub_dir)
     print("======================================")
+    copy_to_destination(static_dir, pub_dir)
     # copy_files(static_dir, pub_dir)
-    copy_folders(static_dir, pub_dir)
+    # copy_folders(static_dir, pub_dir)

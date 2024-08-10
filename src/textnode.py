@@ -348,7 +348,16 @@ def text_to_children(block):
             result.append(text_node_to_html_node(node))
 
     return result
-# def md_strip(text:str, pat) -> str:
-#     value = map(lambda a: a.strip(pat), text.split(' '))
-#     value = ' '.join(list(value))
-#     return value
+
+def markdown_to_html(markdown):
+    
+    blocks = split_blocks(markdown)
+    blocks_typed = [(x, block_to_block_type(x)) for x in blocks]
+
+    html_blocks = []
+    for block, block_type in blocks_typed:
+        html_blocks.append(block_to_html(block, block_type))
+     
+    parent_html_block = ParentNode("div", html_blocks)
+    final_html = parent_html_block.to_html()
+    return final_html

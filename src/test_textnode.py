@@ -1,6 +1,6 @@
 import unittest
 import os
-from textnode import MarkdownBlockType, block_to_html
+from textnode import MarkdownBlockType, block_to_html, markdown_to_html
 
 from textnode import TextNode, TextType, block_to_block_type, get_indexes, pair_indexes, split_blocks, split_by_md_syntax, split_nodes_img, split_nodes_link, text_node_to_html_node, split_nodes_delimeter, text_to_text_nodes, ParentNode
 
@@ -222,19 +222,7 @@ class TestFullMDToHTML(unittest.TestCase):
         full_path = os.path.join(dir_path, md_filepath)
         with open(full_path, 'r') as f:
             markdown = f.read()
-        
-        blocks = split_blocks(markdown)
-        blocks_typed = [(x, block_to_block_type(x)) for x in blocks]
-
-        html_blocks = []
-        for block, block_type in blocks_typed:
-            html_blocks.append(block_to_html(block, block_type))
-         
-        # html_blocks = ParentNode("div", html_blocks)
-        parent_html_block = ParentNode("div", html_blocks)
-        final_html = parent_html_block.to_html()
-        # for b in html_blocks:
-        #     final_html.append(b.to_html())
+        final_html = markdown_to_html(markdown)
         
 
         expected_html = "<div><h1>An h1 header</h1><p>Paragraphs are separated by a blank line.</p><p>2nd paragraph.</p><p><i>Italic</i>, <b>bold</b>, and <code>monospace</code>. Itemized listslook like:</p><ul><li>this one</li><li>that one</li><li>the other one</li></ul><blockquote>Block quotes arewritten like so.They can span multiple paragraphs,if you like.</blockquote><h2>An h2 header</h2><p>Here's a numbered list:</p><ol><li>first item</li><li>second item</li><li>third item</li></ol><h3>An h3 header</h3><p>Code block:</p><pre><code>print('Hello world!')console.log('Hello world!')</code></pre><p>Here's a link to <a href=\"http://foo.bar\">a website</a></p><p>and images can be specified like so:<img src=\"example-image.jpg\" alt=\"example image\"></p></div>"
